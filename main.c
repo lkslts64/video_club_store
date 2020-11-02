@@ -158,7 +158,7 @@ void menu(movie *movies,int sz) {
             for (int i = 0; i < num_movies; i++) {
                 if (!strcmp(title,movies[i].title)) {
                     print_movie(movies[i]);
-                    found = 1;
+                    found2 = 1;
                     break;
                 }
             }
