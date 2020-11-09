@@ -49,19 +49,50 @@ void get_line(char *line,FILE *file) {
     } 
 }
 
-movie new_movie(void) {
-    movie *movie = malloc(sizeof(movie));
-    movie->title = malloc(256 * sizeof(char));
-    movie->director = malloc(sizeof(director_info));
-    movie->director->director_surname = malloc(256 * sizeof(char));
-    movie->director->director_name = malloc(256 * sizeof(char));
-    movie->release_date = malloc(sizeof(date));
-    return *movie;
+movie *new_movie(void) {
+    movie *m = (malloc(sizeof(movie)));
+    m->title = malloc(256 * sizeof(char));
+    m->director = malloc(sizeof(director_info));
+    m->director->director_surname = malloc(256 * sizeof(char));
+    m->director->director_name = malloc(256 * sizeof(char));
+    m->release_date = malloc(sizeof(date));
+    return m;
 }
 
 void print_movie(movie m) {
     printf("id = %d,title = %s,director_surname = %s,director_name = %s,day = %d,month = %d, year = %d\n",m.id,m.title,m.director->director_surname,m.director->director_name,m.release_date->day,m.release_date->month,m.release_date->year);
 }
+
+int compareSort(const void *m1,const void *m2) {
+    movie _m1 = *(movie *)m1;
+    movie _m2 = *(movie *)m2;
+    return strcmp(_m1.director->director_surname,_m2.director->director_surname);
+}
+
+//sort movies based on directors surname
+void sort(movie *movies,int num_movies) {
+    qsort(movies,num_movies,sizeof(movie),compareSort);
+}
+
+int binarySearch(movie *movies, int start, int end, char *targetName) { 
+    while (start <= end) { 
+        int m = start + (end -start) / 2; 
+  
+        int tmp = strcmp(movies[m].director->director_surname,targetName);
+        if (tmp == 0) { 
+            return m; 
+        }
+  
+        if (tmp < 0)  {
+            start = m + 1; 
+        }
+        else {
+            end = m - 1; 
+        }
+    } 
+    return -1; 
+} 
+
 
 movie *load_file(char *filename,int *sz) {
     char line[256];
@@ -73,9 +104,8 @@ movie *load_file(char *filename,int *sz) {
     }
     movie *movies = malloc(movies_num * sizeof(movie));
     for (int i = 0; i < movies_num; i++) {
-        movies[i] = new_movie();
+        movies[i] = *new_movie();
     }
-    int c = 0;
     for (int i = 0; i < movies_num; i++) {
         get_line(line, file);
         movies[i].id = atoi(line);
@@ -92,7 +122,18 @@ movie *load_file(char *filename,int *sz) {
     }
     *sz = movies_num;
     fclose(file);
+    sort(movies,movies_num);
     return movies;
+}
+
+int find_max_id(movie *movies,int num_movies) {
+    int max_id = -1;
+    for (int i = 0; i < num_movies; i++) {
+        if (movies[i].id >  max_id ) {
+            max_id = movies[i].id;
+        }
+    }
+    return max_id;
 }
 
 void menu(movie *movies,int sz) {
@@ -106,16 +147,21 @@ void menu(movie *movies,int sz) {
         {
         //insert
         case 1: 
-            m = new_movie();
+            m = *new_movie();
+            //id = 1 if we dont have any movies 
+            //else is last inserted id + 1.
             if (num_movies == 0) {
                 m.id = 1;
             } else {
-                m.id = movies[num_movies-1].id + 1;
+                m.id = find_max_id(movies,num_movies) + 1;
             }
             num_movies++;
+            //if we dont have any memory allocatd for the insertion, we should.
             if (num_movies >= sz) {
+                //allocate twice as we have (we don't want to make a new allocation every time a new movie is inserted)
                 sz = sz * 2;
-                movies = realloc(movies,sz * sizeof(movie));
+                printf("%d\n",sz * sizeof *movies);
+                movies = realloc(movies,sz * sizeof *movies);
             }
             movies[num_movies-1] = m;
             printf("Please type a movie title\n");
@@ -130,6 +176,8 @@ void menu(movie *movies,int sz) {
             scanf("%d",&m.release_date->month);
             printf("Please type the release year\n");
             scanf("%d",&m.release_date->year);
+            //don't forget to sort after insertion
+            sort(movies,num_movies);
             break;
         //delete
         case 2:
@@ -149,6 +197,8 @@ void menu(movie *movies,int sz) {
             if (!found) {
                 printf("Sorry couldn't fine the specified movie\n");
             }
+            //don't forget to sort after deletion
+            sort(movies,num_movies);
             break;
         case 3: //search based on movie title.
             printf("Type a movie title\n");
@@ -167,6 +217,15 @@ void menu(movie *movies,int sz) {
             }
             break;
         case 4:
+            printf("Type a director's surname\n");
+            char name[256];
+            scanf("%s",name);
+            int res = binarySearch(movies,0,num_movies,name);
+            if (res < 0) {
+                printf("Sorry couldn't fine the specified director's name\n");
+            } else {
+                print_movie(movies[res]);
+            }
             break;
         case 5:
             exit(0);
