@@ -1,0 +1,6 @@
+
+*we keep all the movies in an array ('movies'). The array increases length when we need to insert a 
+movie but we don't have space. We know how many movies we have ('movies_num') and the length of
+the array is 'sz' i.e how many bytes we have allocated.
+*We always keep the movies array sorted by direcotrs surname.When the movies are 
+loaded from disk and upon each insertion or deletion we apply quicksort.
