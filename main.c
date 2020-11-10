@@ -156,6 +156,29 @@ int find_max_id(movie *movies,int num_movies) {
     return max_id;
 }
 
+
+//update the file on exit.
+void save_to_file_on_exit(movie *movies,int movies_num) {
+    char buffer[100000]; //assume the movies data are less than 100Kb
+    char temp[256];
+    for (int i = 0; i < movies_num; i++ ) {
+        sprintf(temp,"%d",movies[i].id); //convert an int to string
+        strcat(buffer,strcat(temp,"\n")); //concatenate two strings
+        strcat(buffer,strcat(movies[i].title,"\n"));
+        strcat(buffer,strcat(movies[i].director->director_surname,"\n"));
+        strcat(buffer,strcat(movies[i].director->director_name,"\n"));
+        sprintf(temp,"%d",movies[i].release_date->day);
+        strcat(buffer,strcat(temp,"\n"));
+        sprintf(temp,"%d",movies[i].release_date->month);
+        strcat(buffer,strcat(temp,"\n"));
+        sprintf(temp,"%d",movies[i].release_date->year);
+        strcat(buffer,strcat(temp,"\n"));
+    }
+    FILE *fp = fopen("movies.txt","w");
+    fprintf(fp,"%s",buffer); //write new contents to file, overwriting the previous ones.
+    fclose(fp);
+}
+
 void menu(movie *movies,int sz) {
     int choice;
     movie m;
@@ -249,8 +272,8 @@ void menu(movie *movies,int sz) {
             }
             break;
         case 5:
+            save_to_file_on_exit(movies,num_movies);
             exit(0);
-            break;
         case 6: //print the movies,for debugging only
             for (int i = 0; i < num_movies; i++) {
                 print_movie(movies[i]);
